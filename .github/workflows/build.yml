@@ -1,0 +1,55 @@
+name: Build Tauri App
+
+on:
+  push:
+    branches:
+      - master  # 当代码推送到 main 分支时触发构建
+  pull_request:
+    branches:
+      - master  # 当有 PR 提交到 main 分支时触发构建
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    
+    runs-on: windows-latest  # 使用 Windows 环境
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4  # 检出代码仓库
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4  # 设置 Node.js 环境
+      with:
+        node-version: '20'  # 设置 Node.js 版本
+        cache: 'npm'
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable  # 使用推荐的 Rust 设置动作
+      with:
+        toolchain: stable  # 使用 stable 版本的 Rust
+        targets: x86_64-pc-windows-msvc
+
+    - name: Install dependencies (Rust)
+      run: |
+        rustup default stable
+        rustup target add x86_64-pc-windows-msvc
+
+    - name: Install dependencies (npm)
+      run: npm ci
+
+    - name: Build Tauri App
+      run: npm run tauri build
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4  # 保留 v4，上传生成的文件
+      with:
+        name: tauri-app
+        path: |
+          src-tauri/target/release/bundle/nsis/*.exe
+          src-tauri/target/release/*.exe
+        compression-level: 0
