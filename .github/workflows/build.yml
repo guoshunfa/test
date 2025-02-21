@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-node@v4  # 设置 Node.js 环境
       with:
         node-version: '20'  # 设置 Node.js 版本
-        cache: 'npm'
+        cache: 'yarn'  # 改为使用 yarn 缓存
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable  # 使用推荐的 Rust 设置动作
@@ -37,11 +37,14 @@ jobs:
         rustup default stable
         rustup target add x86_64-pc-windows-msvc
 
-    - name: Install dependencies (npm)
-      run: npm ci
+    - name: Install Yarn
+      run: npm install -g yarn
+
+    - name: Install dependencies (yarn)
+      run: yarn install  # 使用 yarn install 替代 npm ci
 
     - name: Build Tauri App
-      run: npm run tauri build
+      run: yarn tauri build  # 使用 yarn tauri build
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
